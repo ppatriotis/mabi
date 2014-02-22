@@ -19,7 +19,7 @@ class Errors extends ErrorResponseDictionary {
     'FB_IDENTITY_EMAIL_REQUIRED' => array(
       'message' => 'The provided facebook token does not have permissions for the user\'s email. This is required.',
       'httpcode' => 400,
-      'code' => 1002
+      'code' => 1013
     )
   );
 

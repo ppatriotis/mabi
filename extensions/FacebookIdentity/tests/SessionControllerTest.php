@@ -46,7 +46,7 @@ class SessionControllerTest extends AppTestCase {
     $output = json_decode($this->app->getResponse()->body());
     $this->assertNotEmpty($output);
     $this->assertNotEmpty($output->error);
-    $this->assertEquals('1002', $output->error->code);
+    $this->assertEquals('1013', $output->error->code);
   }
 
   public function testSuccessfulSessionPostCollection() {
