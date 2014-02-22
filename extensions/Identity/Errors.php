@@ -71,6 +71,14 @@ class Errors extends ErrorResponseDictionary {
     )
   );
 
+  public static $COULD_NOT_FIND_SESSION = array(
+    'FORGET_PASSWORD_COULD_NOT_FIND_SESSION' => array(
+      'message' => 'Could not find a session for this user',
+      'httpcode' => 500,
+      'code' => 1012
+    )
+  );
+
   public static $PASSWORD_EMAIL_REQUIRED = array(
     'FORGET_PASSWORD_EMAIL_REQUIRED' => array(
       'message' => 'Email is required to reset password',

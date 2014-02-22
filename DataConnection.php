@@ -19,6 +19,8 @@ interface DataConnection {
 
   function findOneByField($field, $value, $table, array $fields = array());
 
+  function findOneByMaxField($field, $value, $maxField, $table, array $fields = array());
+
   function findAllByField($field, $value, $table, array $fields = array());
 
   function deleteByField($field, $value, $table);

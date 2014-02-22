@@ -192,7 +192,6 @@ class UserController extends RESTModelController {
 
     $this->model->created = $oldUser->created;
     $this->model->salt = $oldUser->salt;
-    $this->model->lastAccessed = $oldUser->lastAccessed;
     $this->model->save();
     echo $this->model->outputJSON();
   }
@@ -231,9 +230,15 @@ class UserController extends RESTModelController {
       $this->getApp()->returnError(Errors::$PASSWORD_NO_USER_EMAIL);
     }
 
-    $user->lastAccessed = new \DateTime('now');
-    $user->save();
-    $authToken = Identity::passHash($user->passHash, $user->lastAccessed->getTimestamp());
+    /**
+     * @var $lastSession Session
+     */
+    $lastSession = Session::init($this->getApp());
+    if (!$lastSession->findByMaxField('userId', $user->getId(), 'lastAccessed')) {
+      $this->getApp()->returnError(Errors::$COULD_NOT_FIND_SESSION);
+    }
+
+    $authToken = Identity::passHash($user->passHash, $lastSession->lastAccessed->getTimestamp());
 
     $this->forgotEmailTemplate->mergeData(array('!authToken' => $authToken));
 

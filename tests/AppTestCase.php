@@ -73,6 +73,7 @@ class AppTestCase extends \PHPUnit_Framework_TestCase {
     $this->dataConnectionMock = $this->getMock('\MABI\Testing\MockDataConnection',
       array(
         'findOneByField',
+        'findOneByMaxField',
         'query',
         'insert',
         'save',

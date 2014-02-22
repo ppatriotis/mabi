@@ -464,6 +464,29 @@ class Model {
    *
    * @param $fieldName string
    * @param $value string
+   * @param $maxField string
+   *
+   * @return bool
+   */
+  public function findByMaxField($fieldName, $value, $maxField) {
+    $dataConnection = $this->app->getDataConnection($this->connection);
+    if ($fieldName == $this->idColumn) {
+      $value = $dataConnection->convertToNativeId($value);
+    }
+    $result = $dataConnection->findOneByMaxField($fieldName, $value, $maxField, $this->table, $this->readFields);
+
+    if ($result == NULL) {
+      return FALSE;
+    }
+    $this->load($result);
+    return TRUE;
+  }
+
+  /**
+   * todo: docs
+   *
+   * @param $fieldName string
+   * @param $value string
    *
    * @return \MABI\Model[]
    */

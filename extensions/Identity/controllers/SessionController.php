@@ -73,7 +73,15 @@ class SessionController extends RESTModelController {
         }
       }
       elseif (!empty($this->model->authToken)) {
-        if ($this->model->authToken != Identity::passHash($user->passHash, $user->lastAccessed->getTimestamp())) {
+        /**
+         * @var $lastSession Session
+         */
+        $lastSession = Session::init($this->getApp());
+        if (!$lastSession->findByMaxField('userId', $user->getId(), 'lastAccessed')) {
+          $this->getApp()->returnError(Errors::$COULD_NOT_FIND_SESSION);
+        }
+
+        if ($this->model->authToken != Identity::passHash($user->passHash, $lastSession->lastAccessed->getTimestamp())) {
           $this->getApp()->returnError(Errors::$TOKEN_INVALID);
         }
       }

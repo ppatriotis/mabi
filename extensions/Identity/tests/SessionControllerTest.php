@@ -58,6 +58,17 @@ class SessionControllerTest extends AppTestCase {
       ->method('findOneByField')
       ->will($this->returnCallback(array($this, 'myFindOneByFieldCallback')));
 
+    // Needs to find the latest session to generate the authToken
+    $this->dataConnectionMock->expects($this->once())
+      ->method('findOneByMaxField')
+      ->with('userId', 1, 'lastAccessed', 'sessions', array())
+      ->will($this->returnValue(array(
+        'id' => '3',
+        'date_created' => 1379430989,
+        'lastAccessed' => 1379430989,
+        'userId' => 1
+      )));
+
     $this->app->call();
     $this->assertEquals(400, $this->app->getResponse()->status());
   }
@@ -73,6 +84,17 @@ class SessionControllerTest extends AppTestCase {
     $this->dataConnectionMock->expects($this->exactly(2))
       ->method('findOneByField')
       ->will($this->returnCallback(array($this, 'myFindOneByFieldCallback')));
+
+    // Needs to find the latest session to generate the authToken
+    $this->dataConnectionMock->expects($this->once())
+      ->method('findOneByMaxField')
+      ->with('userId', 1, 'lastAccessed', 'sessions', array())
+      ->will($this->returnValue(array(
+        'id' => '3',
+        'date_created' => 1379430989,
+        'lastAccessed' => 1379430989,
+        'userId' => 1
+      )));
 
     $this->dataConnectionMock->expects($this->once())
       ->method('insert')
@@ -143,8 +165,7 @@ class SessionControllerTest extends AppTestCase {
           'email' => 'ppatriotis@gmail.com',
           'passHash' => '604cefb585491865043db59f5f200c08af016dc636bcb37c858199e20f082c10',
           // result of: hash_hmac('sha256', '123', 'salt4456');
-          'salt' => 'salt4456',
-          'lastAccessed' => 1379430989
+          'salt' => 'salt4456'
         );
     }
   }

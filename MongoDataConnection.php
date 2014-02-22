@@ -116,6 +116,17 @@ class MongoDataConnection implements DataConnection {
     return $result;
   }
 
+  function findOneByMaxField($field, $value, $maxField, $table, array $fields = array()) {
+    $result = $this->db->selectCollection($table)
+      ->find(array($field => $value), $fields)
+      ->sort(array($maxField => -1))->limit(1)->current();
+    if (empty($result)) {
+      return NULL;
+    }
+
+    return $result;
+  }
+
   function findAllByField($field, $value, $table, array $fields = array()) {
     $return = $this->db->selectCollection($table)->find(array($field => $value), $fields);
 

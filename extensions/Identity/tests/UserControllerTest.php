@@ -27,12 +27,12 @@ class UserControllerTest extends AppTestCase {
     'email' => 'ppatriotis@gmail.com',
     'passHash' => '604cefb585491865043db59f5f200c08af016dc636bcb37c858199e20f082c10',
     // result of: hash_hmac('sha256', '123', 'salt4456');
-    'salt' => 'salt4456',
-    'lastAccessed' => 1379430989
+    'salt' => 'salt4456'
   );
 
   protected static $SESSION_111444 = array(
-    'created' => '1370663864',
+    'id' => 111444,
+    'created' => 1370663864,
     'userId' => 122
   );
 
@@ -158,30 +158,39 @@ class UserControllerTest extends AppTestCase {
       ->with('userId', 122, 'sessions', array())
       ->will($this->returnValue(array(self::$SESSION_111444, array('id' => 111445, 'userId' => 122))));
 
+    // Makes sure other sessions were deleted since password was changed
     $this->dataConnectionMock->expects($this->once())
       ->method('deleteByField')
       ->with('id', 111445, 'sessions');
 
-    $userDateUpdate = self::$USER_122;
+    $session_111444_mod = self::$SESSION_111444;
     $now = new \DateTime('now');
-    $userDateUpdate['lastAccessed'] = $now->getTimestamp();
-    $userOtherUpdate = self::$USER_122;
-    $userOtherUpdate['firstName'] = 'photis';
-    $userOtherUpdate['lastName'] = 'patriotis2';
-    $userOtherUpdate['email'] = 'ppatriotis2@gmail.com';
-    $userOtherUpdate['passHash'] = 'facf86a33affc4c13a720ebfc8f5030faec8cedf2c1aa8855185e7d8cc0dab0b';
+    $session_111444_mod['lastAccessed'] = $now->getTimestamp();
+
+    $userUpdate = self::$USER_122;
+    $userUpdate['firstName'] = 'photis';
+    $userUpdate['lastName'] = 'patriotis2';
+    $userUpdate['email'] = 'ppatriotis2@gmail.com';
+    $userUpdate['passHash'] = 'facf86a33affc4c13a720ebfc8f5030faec8cedf2c1aa8855185e7d8cc0dab0b';
     // result of: hash_hmac('sha256', '777777', 'salt4456');
 
     $this->dataConnectionMock->expects($this->exactly(2))
       ->method('save')
-      ->will($this->returnCallback(function ($table, $data, $field, $value) use ($userDateUpdate, $userOtherUpdate) {
-        $this->assertEquals($table, 'users');
-        $this->assertEquals($field, 'id');
-        $this->assertEquals($value, 122);
-        $this->assertThat($data, $this->logicalOr(
-          $this->equalTo($userDateUpdate),
-          $this->equalTo($userOtherUpdate)
+      ->will($this->returnCallback(function ($table, $data, $field, $value) use ($session_111444_mod, $userUpdate) {
+        $this->assertThat($table, $this->logicalOr(
+          $this->equalTo('users'),
+          $this->equalTo('sessions')
         ));
+        if($table == 'users') {
+          $this->assertEquals($field, 'id');
+          $this->assertEquals($value, 122);
+          $this->assertEquals($data, $userUpdate);
+        }
+        else {
+          $this->assertEquals($field, 'id');
+          $this->assertEquals($value, 111444);
+          $this->assertEquals($data, $session_111444_mod);
+        }
       }));
 
     $this->app->call();
@@ -202,23 +211,31 @@ class UserControllerTest extends AppTestCase {
         return $this->findOneByFieldUpdateUserCallback($field, $value, $table, $fields, FALSE);
       }));
 
-    $userDateUpdate = self::$USER_122;
+    $session_111444_mod = self::$SESSION_111444;
     $now = new \DateTime('now');
-    $userDateUpdate['lastAccessed'] = $now->getTimestamp();
-    $userOtherUpdate = self::$USER_122;
-    $userOtherUpdate['firstName'] = 'photis';
-    $userOtherUpdate['lastName'] = 'patriotis2';
+    $session_111444_mod['lastAccessed'] = $now->getTimestamp();
+
+    $userUpdate = self::$USER_122;
+    $userUpdate['firstName'] = 'photis';
+    $userUpdate['lastName'] = 'patriotis2';
 
     $this->dataConnectionMock->expects($this->exactly(2))
       ->method('save')
-      ->will($this->returnCallback(function ($table, $data, $field, $value) use ($userDateUpdate, $userOtherUpdate) {
-        $this->assertEquals($table, 'users');
-        $this->assertEquals($field, 'id');
-        $this->assertEquals($value, 122);
-        $this->assertThat($data, $this->logicalOr(
-          $this->equalTo($userDateUpdate),
-          $this->equalTo($userOtherUpdate)
+      ->will($this->returnCallback(function ($table, $data, $field, $value) use ($session_111444_mod, $userUpdate) {
+        $this->assertThat($table, $this->logicalOr(
+          $this->equalTo('users'),
+          $this->equalTo('sessions')
         ));
+        if($table == 'users') {
+          $this->assertEquals($field, 'id');
+          $this->assertEquals($value, 122);
+          $this->assertEquals($data, $userUpdate);
+        }
+        else {
+          $this->assertEquals($field, 'id');
+          $this->assertEquals($value, 111444);
+          $this->assertEquals($data, $session_111444_mod);
+        }
       }));
 
     $this->app->call();
@@ -350,6 +367,17 @@ class UserControllerTest extends AppTestCase {
     $this->dataConnectionMock->expects($this->exactly(2))
       ->method('findOneByField')
       ->will($this->returnCallback(array($this, 'findOneByFieldForgotPasswordCallback')));
+
+    // Needs to find the latest session to generate the authToken
+    $this->dataConnectionMock->expects($this->once())
+      ->method('findOneByMaxField')
+      ->with('userId', 122, 'lastAccessed', 'sessions', array())
+      ->will($this->returnValue(array(
+        'id' => '3',
+        'date_created' => 1379430989,
+        'lastAccessed' => 1379430989,
+        'userId' => 122
+      )));
 
     $this->app->call();
     $this->assertEquals(200, $this->app->getResponse()->status());

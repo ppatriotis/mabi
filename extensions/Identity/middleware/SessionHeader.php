@@ -30,16 +30,16 @@ class SessionHeader extends Middleware {
     $foundSession = call_user_func($this->sessionModelClass . '::init', $this->getApp());
     if($foundSession->findById($sessionId)) {
       $this->session = $foundSession;
-      $this->getApp()->getRequest()->session = $this->session;
       $now = new \DateTime('now');
       $this->session->lastAccessed = $now;
+      $this->session->save();
 
       $user = User::init($this->getApp());
       $user->findById($this->session->userId);
-      $user->lastAccessed = $now;
-      $user->save();
 
       $this->session->user = $user;
+
+      $this->getApp()->getRequest()->session = $this->session;
     }
 
     if (!empty($this->next)) {
